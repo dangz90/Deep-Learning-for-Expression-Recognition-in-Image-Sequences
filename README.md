@@ -19,7 +19,7 @@ Give examples
 * [Keras](https://keras.io/) - Keras is a high-level neural networks API, written in Python
 * [Tensorflow](https://www.tensorflow.org/) - TensorFlow™ is an open source software library for numerical computation using data flow graphs.
 
-## Authors
+## Author
 
 * **Daniel Garcia Zapata** [dangz90](https://github.com/dangz90)
 
