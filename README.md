@@ -21,9 +21,7 @@ Give examples
 
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+* **Daniel Garcia Zapata** [dangz90](https://github.com/dangz90)
 
 ## License
 
