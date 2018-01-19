@@ -1,0 +1,10 @@
+/_Dataset/*
+/_Legacy/*
+/_Preprocess/Frontalization/*
+/_Preprocess/frames_per_participants/*
+/Models/CNN/weights/*
+/Models/CNN_2Stream/weights/*
+/Models/CNN_3D/weights/*
+/Models/CNN+EGG/weights/*
+/Models/CNN+Geometry/weights/*
+/Models/CNN+LSTM/weights/*
