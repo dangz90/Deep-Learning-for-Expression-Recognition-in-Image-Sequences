@@ -11,11 +11,11 @@
 \def\maketitle{
   \begin{titlepage}{
     %\linespread{1.5}
-    \Large University of London \\
+    \Large Universitat Polit\'{e}cnica de Catalunya \\
     %\linebreak
-    Imperial College of Science, Technology and Medicine \\
+    Barcelona Tech \\
     %\linebreak
-    Department of Computing
+    Facultat d'Inform\'{e}tica de Barcelona
     \rm
     \vskip 3in
     \Large \bf \@title \par
@@ -27,9 +27,9 @@
   \par
   Submitted in part fulfilment of the requirements for the degree of 
   \linebreak
-  Doctor of Philosophy in Computing of the University of London and 
+  Master of Science in Artificial Intelligence 
   \linebreak
-  the Diploma of Imperial College, \@submitdate
+  \@submitdate
   \vfil
   \end{titlepage}
 }
@@ -47,11 +47,12 @@
   \egroup
   \vss
   \egroup
-  \cleardoublepage
+  \clearpage
 }
 
 \def\abstract{
-  \begin{center}{
+ 	\clearpage
+	\begin{center}{
     \large\bf Abstract}
   \end{center}
   \small
@@ -64,27 +65,24 @@
 }
 
 \newenvironment{acknowledgements}{
-  \cleardoublepage
+  \clearpage
   \begin{center}{
     \large \bf Acknowledgements}
   \end{center}
   \small
   \linespread{1.5}
   \normalsize
-}{\cleardoublepage}
+}{\clearpage}
 \def\endacknowledgements{
   \par
 }
 
 \newenvironment{dedication}{
-  \cleardoublepage
-  \begin{center}{
-    \large \bf Dedication}
-  \end{center}
+  \clearpage
   \small
   \linespread{1.5}
   \normalsize
-}{\cleardoublepage}
+}{\clearpage}
 \def\enddedication{
   \par
 }
@@ -95,21 +93,20 @@
     \doublespacing
 }
 
-\def\body{
-    \cleardoublepage    
-    \pagestyle{uheadings}
+\def\body{    
     \tableofcontents
     \pagestyle{plain}
-    \cleardoublepage
-    \pagestyle{uheadings}
+    \clearpage
+    
     \listoftables
     \pagestyle{plain}
-    \cleardoublepage
-    \pagestyle{uheadings}
+    \clearpage
+    
     \listoffigures
     \pagestyle{plain}
-    \cleardoublepage
-    \pagestyle{uheadings}
+    \clearpage
+    
+%     \pagestyle{uheadings}
     \pagenumbering{arabic}
     \doublespacing
 }

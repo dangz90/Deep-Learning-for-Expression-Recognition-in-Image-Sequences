@@ -1,0 +1,26 @@
+\begin{table}[H] \centering
+
+% Colour for the rulings in tables:
+\makeatletter
+\def\rulecolor#1#{\CT@arc{#1}}
+\def\CT@arc#1#2{%
+\ifdim\baselineskip=\z@\noalign\fi
+{\gdef\CT@arc@{\color#1{#2}}}}
+\let\CT@arc@\relax
+\rulecolor{gray!50}
+\makeatother
+
+\begin{tabular}{@{}l|l@{}}
+	\toprule
+    Configuration & Test Accuracy \\
+    
+    \midrule
+    Frontalization + Geometry & 0.299450 \\    
+    
+    \bottomrule
+\end{tabular}
+    
+	\caption{Fake vs Real Frontalization \& Geometry Test Accuracy} 
+    \label{table:fake-fakereal_frontal_geo}
+
+\end{table}

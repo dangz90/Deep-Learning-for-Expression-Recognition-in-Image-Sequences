@@ -1,0 +1,34 @@
+\begin{table}[H] \centering
+
+% Colour for the rulings in tables:
+\makeatletter
+\def\rulecolor#1#{\CT@arc{#1}}
+\def\CT@arc#1#2{%
+\ifdim\baselineskip=\z@\noalign\fi
+{\gdef\CT@arc@{\color#1{#2}}}}
+\let\CT@arc@\relax
+\rulecolor{gray!50}
+\makeatother
+        
+\begin{tabular}{@{}l|l@{}}
+	\toprule
+    Configuration & Test Accuracy \\
+    
+    \midrule
+	No Freezed + No Pooling & 0.284269 \\
+    First Freezed + 3 Fully Connected + No Pooling & 0.197020 \\
+    
+    All Freezed + 3 Fully Connected & 0.428151 \\
+    All Freezed + 3 Fully Connected + Average Pooling & 0.420702 \\
+	All Freezed + 3 Fully Connected + Max Pooling & 0.437561 \\
+
+    All Freezed + No Pooling & 0.425015 \\
+    All Freezed + Avg Pooling & 0.422662 \\
+    All Freezed + Max Pooling & 0.431092 \\
+    \bottomrule
+\end{tabular}
+    
+	\caption{Emotion No Pre-processing Test Accuracy} 
+    \label{table:fake-emotion_nopre}
+
+\end{table}

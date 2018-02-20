@@ -18,12 +18,12 @@
 
 \def\ps@uheadings{\let\@mkboth\markboth
 % modifications
-\def\@oddhead{\protect\underline{\protect\makebox[\textwidth][l]
-		{\sl\rightmark\hfill\rm\thepage}}}
+% \def\@oddhead{\protect\underline{\protect\makebox[\textwidth][l]
+% 		{\sl\rightmark\hfill\rm\thepage}}}
 \def\@oddfoot{}
 \def\@evenfoot{}
-\def\@evenhead{\protect\underline{\protect\makebox[\textwidth][l]
-		{\rm\thepage\hfill\sl\leftmark}}}
+% \def\@evenhead{\protect\underline{\protect\makebox[\textwidth][l]
+% 		{\rm\thepage\hfill\sl\leftmark}}}
 % end of modifications
 \def\chaptermark##1{\markboth {\ifnum \c@secnumdepth >\m@ne
  \chapapp2\ \thechapter. \ \fi ##1}{}}%

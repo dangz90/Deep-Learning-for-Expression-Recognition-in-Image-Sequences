@@ -3,39 +3,61 @@
 
 \include{thesis.preamble}
 
-
 \begin{document}
 
-\title{\LARGE {\bf Title of my Ph.D. Thesis}\\
- \vspace*{6mm}
-}
-
-\author{Joe Bloggs}
-\submitdate{October 2008}
-
-\normallinespacing
+\title{
+      \LARGE {\bf Deep Learning for Multi-Modal Hidden Emotion Analysis}
+      \vspace*{6mm}
+  }
+	\author{Daniel Natanael Garc\'{i}a Zapata}
+	\submitdate{January 2018}
+	\normallinespacing
 \maketitle
 
 \preface
 \input{abstract/abstract}
 \input{acknowledgements/acknowledgements}
 \input{dedication/dedication}
-\input{quotes/quotes}
 
 \body
+%% introduction of thesis comes here
 \input{introduction/introduction}
-\input{background/background}
+\input{relatedwork/relatedwork}
 
-% body of thesis comes here
+%% body of thesis comes here
+% Theoretical Framework
+\input{theoretical/theoretical}
+\input{theoretical/ann}
+\input{theoretical/loss}
+\input{theoretical/adaptive}
+\input{theoretical/activation}
+\input{theoretical/regularization}
+\input{theoretical/cnn}
+\input{theoretical/3dcnn}
+\input{theoretical/rnn}
+\input{theoretical/lstm}
+\input{theoretical/gru}
+\input{theoretical/dimensionality_reduction}
 
+% Deep Architectures
+\input{deep_architectures/deep_architectures}
+\input{deep_architectures/pretrained}
+\input{deep_architectures/proposed}
+
+\input{datasets/datasets}
+\input{setup/setup}
+
+% results of experiments come here
+\input{results/results}
+
+%% conclusion of thesis comes here
 \input{conclusion/conclusion}
 
+%% appendices come here
 \appendix
-% appendices come here
-
 
 \addcontentsline{toc}{chapter}{Bibliography}
-\bibliographystyle{alpha}
-\bibliography{bibliography/bibliography}
+\bibliographystyle{abbrv}
+\bibliography{bibliography/Bibliography}
 
 \end{document}

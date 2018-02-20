@@ -3,6 +3,12 @@
 \usepackage{latexsym}
 \usepackage{mathchars}
 \usepackage{setspace}
+\usepackage{subfigure}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\pgfplotsset{compat=1.14}
 
 \input{blocked.sty}
 \input{uhead.sty}
@@ -61,6 +67,12 @@
 \newcommand{\boolsat}{\!\models}
 \newcommand{\boolnsat}{\!\not\models}
 
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{array, booktabs, caption, makecell}
+\renewcommand\theadfont{\bfseries}
 
 \newcommand{\op}[1]{\mathrm{#1}}
 \newcommand{\s}[1]{\ensuremath{\mathcal #1}}
