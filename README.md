@@ -29,14 +29,12 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-* The face frontalization [2] preprocess was performed using Douglas Souza [dougsouza] implementation (https://github.com/dougsouza/face-frontalization)
-* The 3D CNN model is based on Alberto Montes [albertomontesg] implementation of C3D model. (https://gist.github.com/albertomontesg/d8b21a179c1e6cca0480ebdf292c34d2)
-* The CNN model is based on Refik Can Malli [rcmalli] implementation of the VGG-Face (https://github.com/rcmalli/keras-vggface)
-* The VGG-Face was first introduced by Omkar M. Parkhi, Andrea Vedaldi, Andrew Zisserman from University of Oxford
-(http://www.robots.ox.ac.uk/~vgg/software/vgg_face/)
-* The C3D first introduced by Du Tran, Lubomir Bourdev, Rob Fergus, Lorenzo Torresani, Manohar Paluri
-from Facebook AI Research and Dartmouth College 
-(https://www.cv-foundation.org/openaccess/content_iccv_2015/html/Tran_Learning_Spatiotemporal_Features_ICCV_2015_paper.html)
+* The face frontalization [2] preprocess was performed using Douglas Souza [dougsouza](https://github.com/dougsouza/face-frontalization) implementation.
+* The 3D CNN model is based on Alberto Montes [albertomontesg](https://gist.github.com/albertomontesg/d8b21a179c1e6cca0480ebdf292c34d2) implementation of C3D model.
+* The CNN model is based on Refik Can Malli [rcmalli](https://github.com/rcmalli/keras-vggface) implementation of the VGG-Face.
+* The [VGG-Face](http://www.robots.ox.ac.uk/~vgg/software/vgg_face/) was first introduced by Omkar M. Parkhi, Andrea Vedaldi, Andrew Zisserman from University of Oxford
+* The [C3D Model](https://www.cv-foundation.org/openaccess/content_iccv_2015/html/Tran_Learning_Spatiotemporal_Features_ICCV_2015_paper.html) first introduced by Du Tran, Lubomir Bourdev, Rob Fergus, Lorenzo Torresani, Manohar Paluri
+from Facebook AI Research and Dartmouth College.
 
 ## Bibliography
 * [1] Ofodile, I., Kulkarni, K., Corneanu, C. A., Escalera, S., Baro, X., Hyniewska, S., ... & Anbarjafari, G. (2017). Automatic recognition of deceptive facial expressions of emotion. arXiv preprint arXiv:1707.04061.
