@@ -29,7 +29,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-* The face frontalization preprocess was performed using Douglas Souza [dougsouza] implementation (https://github.com/dougsouza/face-frontalization)
+* The face frontalization [2] preprocess was performed using Douglas Souza [dougsouza] implementation (https://github.com/dougsouza/face-frontalization)
 * The 3D CNN model is based on Alberto Montes [albertomontesg] implementation of C3D model. (https://gist.github.com/albertomontesg/d8b21a179c1e6cca0480ebdf292c34d2)
 * The CNN model is based on Refik Can Malli [rcmalli] implementation of the VGG-Face (https://github.com/rcmalli/keras-vggface)
 * The VGG-Face was first introduced by Omkar M. Parkhi, Andrea Vedaldi, Andrew Zisserman from University of Oxford
