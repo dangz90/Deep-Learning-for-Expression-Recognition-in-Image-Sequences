@@ -4,6 +4,15 @@
 /_Legacy/*
 /_Preprocess/Frontalization/*
 /_Preprocess/frames_per_participants/*
+
+/Models/CNN/weights/*
+/Models/CNN_2Stream/weights/*
+/Models/CNN_3D/weights/*
+/Models/CNN+EGG/weights/*
+/Models/CNN+Geometry/weights/*
+/Models/CNN+LSTM/weights/*
+/Models/CNN+GRU/weights/*
+
 /Models/CNN/_versions/*
 /Models/CNN_2Stream/_versions/*
 /Models/CNN_3D/_versions/*
