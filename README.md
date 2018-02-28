@@ -18,7 +18,7 @@ Give examples
 
 * [Keras](https://keras.io/) - Keras is a high-level neural networks API, written in Python
 * [Tensorflow](https://www.tensorflow.org/) - TensorFlow™ is an open source software library for numerical computation using data flow graphs.
-* [Theano](http://deeplearning.net/software/theano/) - TTheano is a Python library that allows you to define, optimize, and evaluate mathematical expressions involving multi-dimensional arrays efficiently.
+* [Theano](http://deeplearning.net/software/theano/) - Theano is a Python library that allows you to define, optimize, and evaluate mathematical expressions involving multi-dimensional arrays efficiently.
 
 ## Author
 
