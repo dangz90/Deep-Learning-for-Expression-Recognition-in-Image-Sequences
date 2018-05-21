@@ -1,4 +1,4 @@
-# Deep Learning for Multi-Modal Hidden Emotion Analysis
+# Deep Learning for Expression Recognition in Image Sequences
 
 Facial expressions convey lots of information, which can be used for identifying emotions. These facial expressions vary in time when they are being performed. Recognition of certain emotions is a very challenging task even for people. This thesis consists of using machine learning algorithms for recognizing emotions in image sequences. It uses the state-of-the-art deep learning on collected data for automatic analysis of emotions. Concretely, the thesis presents a comparison of current state-of-the-art learning strategies that can handle spatio-temporal data and adapt classical static approaches to deal with images sequences. Expanded versions of CNN, 3DCNN, and Recurrent approaches are evaluated and compared in two public datasets for universal emotion recognition, where the performances are shown, and pros and cons are discussed.
 
