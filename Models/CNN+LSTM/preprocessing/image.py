@@ -1110,7 +1110,7 @@ class DirectoryIterator(Iterator):
 
             file_path = os.path.join(new_directory, 'NoSymmetry', fclass, image_file)
 
-            if file_path.split('/')[4] == 'training':
+            if file_path.split('/')[5] == 'training':
                 file_path = file_path.replace('.MP4', '_').replace('.jpg.jpg', '.h5')
             else:
                 # file_path = file_path.replace('.jpg.jpg', '.jpg')

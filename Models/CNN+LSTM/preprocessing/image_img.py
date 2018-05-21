@@ -502,7 +502,7 @@ class ImageDataGenerator(object):
                             save_prefix='',
                             save_format='png',
                             follow_links=False,
-                            h5=False):
+                            partition=''):
         return DirectoryIterator(
             directory, self,
             target_size=target_size, color_mode=color_mode,
@@ -513,7 +513,7 @@ class ImageDataGenerator(object):
             save_prefix=save_prefix,
             save_format=save_format,
             follow_links=follow_links,
-            h5=h5)
+            partition=partition)
 
     def standardize(self, x):
         """Apply the normalization configuration to a batch of inputs.
@@ -1016,7 +1016,7 @@ class DirectoryIterator(Iterator):
                  batch_size=32, shuffle=True, seed=None,
                  data_format=None,
                  save_to_dir=None, save_prefix='', save_format='png',
-                 follow_links=False, h5=False):
+                 follow_links=False, partition=''):
         if data_format is None:
             data_format = backend.image_data_format()
         self.directory = directory
@@ -1048,7 +1048,7 @@ class DirectoryIterator(Iterator):
         self.save_to_dir = save_to_dir
         self.save_prefix = save_prefix
         self.save_format = save_format
-        self.h5 = h5
+        self.partition = partition
 
         white_list_formats = {'png', 'jpg', 'jpeg', 'bmp', 'ppm', 'npy'}
 
@@ -1095,49 +1095,57 @@ class DirectoryIterator(Iterator):
     def _get_batches_of_transformed_samples(self, index_array):
 
         def file_to_array(image_file, fname):
-            fclass = fname.split('/')[0]
+            # new_directory = self.directory.replace('5frames','frontalization')
+            # img_path = os.path.join(new_directory, 'NoSymmetry', fname)
 
-            new_directory = self.directory.replace('5frames','frontalization')
+            # if img_path.split('/')[5] == 'training':
+            #     img_path = img_path.replace('.MP4', '_').replace('.jpg.jpg', '.jpg')
+            # else:
+            #     check = Path(img_path.replace('.mp4', '_').replace('.jpg.jpg', '.jpg'))
 
-            img_path = os.path.join(new_directory, 'NoSymmetry', fclass, image_file)
+            #     if check.exists():
+            #         img_path = img_path.replace('.mp4', '_').replace('.jpg.jpg', '.jpg')
+            #     else:
+            #         img_path = img_path.replace('.jpg.jpg', '.jpg')
+            
+            # img = load_img(os.path.join(img_path),
+            #                             grayscale=grayscale,
+            #                             target_size=self.target_size)
+            # x = img_to_array(img, data_format=self.data_format)
+            # x = self.image_data_generator.random_transform(x)
+            # x = self.image_data_generator.standardize(x)
 
-            if img_path.split('/')[4] == 'training':
-                img_path = img_path.replace('.MP4', '_').replace('.jpg.jpg', '.jpg')
-            else:
-                check = Path(img_path.replace('.mp4', '_').replace('.jpg.jpg', '.jpg'))
-
-                if check.exists():
-                    img_path = img_path.replace('.mp4', '_').replace('.jpg.jpg', '.jpg')
-                else:
-                    img_path = img_path.replace('.jpg.jpg', '.jpg')
+            new_directory = self.directory.replace('consecutive', self.partition)
+            img_path = os.path.join(new_directory, fname.replace('.h5', '.jpeg'))
             
             img = load_img(os.path.join(img_path),
                                         grayscale=grayscale,
                                         target_size=self.target_size)
             x = img_to_array(img, data_format=self.data_format)
             x = self.image_data_generator.random_transform(x)
-            x = self.image_data_generator.standardize(x)
+            x = self.image_data_generator.standardize(x)            
 
             return x
 
         # batch_x = np.zeros((len(index_array),) + self.image_shape, dtype=backend.floatx())
         grayscale = self.color_mode == 'grayscale'
-        if self.h5 == True:
-            batch_x = np.zeros((len(index_array),) + (5,224,224,3), dtype=backend.floatx())
+        batch_x = np.zeros((len(index_array),) + (5,224,224,3), dtype=backend.floatx())
 
 
-            # build batch of h5 files
-            for i, j in enumerate(index_array):
-                fname = self.filenames[j]
+        # build batch of h5 files
+        for i, j in enumerate(index_array):
+            fname = self.filenames[j]
 
-                # Read h5 files
-                f = np.load(os.path.join(self.directory, fname))                
-                file_list = [fi for fi in f]
+            # Read h5 files
+            f = np.load(os.path.join(self.directory, fname))
 
-                x = np.array([np.array(file_to_array(file, fname)) for file in file_list])
+            file_path = self.directory
+            file_list = [os.path.basename(fi) for fi in f]
 
-                # Normalize
-                batch_x[i] = x
+            x = np.array([np.array(file_to_array(file_path, os.path.join(os.path.dirname(fname), file))) for file in file_list])
+
+            # Normalize
+            batch_x[i] = x
 
         # optionally save augmented images to disk for debugging purposes
         if self.save_to_dir:

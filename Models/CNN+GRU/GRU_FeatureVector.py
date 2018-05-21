@@ -7,8 +7,8 @@ import numpy as np
 from keras.optimizers import adam
 from keras.initializers import glorot_uniform
 from keras.models import Sequential, Model, load_model
+from keras.layers import GRU, Dense, Activation, Flatten, Input
 from keras.callbacks import ModelCheckpoint, CSVLogger, TensorBoard, Callback
-from keras.layers import Dense, Activation, Flatten, Input, LSTM, TimeDistributed
 
 from collections import OrderedDict
 from SaveModelDirectory import create_path
@@ -23,16 +23,16 @@ __author__ = 'Daniel Garcia Zapata'
 def obtain_datagen(datagen, train_path, h5=True):
 	return datagen.flow_from_directory(
 				train_path,
-				target_size=(img_width,img_height),
+				target_size=(224,224),
 				batch_size=batch_size,
 				class_mode='binary',
-				partition=partition) 	
+				partition=partition)
 
 # Yield for data generators
 def generate_data_generator_for_two_images(genX1):
 	while True:
 		X1i = genX1.next()
-		yield X1i[0], X1i[1]	
+		yield X1i[0], X1i[1]
 
 # Class for writing the model parameters
 class ModelParameters(Callback):
@@ -79,62 +79,56 @@ class ModelParameters(Callback):
 		self.csv_file.flush()        
 
 		self.csv_file.close()
-		self.writer = None  
+		self.writer = None   		
 
 if __name__ == '__main__':
 
-	__model__ = 'CNN_LSTM_Image'
+	print("Starting:", time.ctime())
 
-	print('Starting:', time.ctime(), '\n')
+	###########################################
+	# Data
 
+	input_shape = 4096
+
+	dataset = 'OULU-CASIA'			# OULU-CASIA, SASE-FE
+	partition = 'feature_vector_prealigned'
+	if dataset == 'OULU-CASIA':
+		from preprocessing.image_oulu import ImageDataGenerator
+
+		train_data_dir = os.path.join('..', '..', '_Dataset', dataset, 'consecutive', 'training')	
+		validation_data_dir = os.path.join('..', '..', '_Dataset', dataset, 'consecutive', 'validation')
+		n_output = 6
+	else:
+		from preprocessing.image import ImageDataGenerator
+
+		train_data_dir = os.path.join('..', '..', '_Dataset', 'SASE-FE', '5frames', 'training')
+		validation_data_dir = os.path.join('..', '..', '_Dataset', 'SASE-FE', '5frames', 'validation')
+		n_output = 12
+
+	__model__ = 'CNN-GRU-' + partition	
 
 	###########################################
 	# Parameters
 	
 	epochs = 20
-	batch_size = 30
-	impl = 2 			# gpu	
-
-	###########################################
-	# Data
-	
-	img_width, img_height, channels = 224, 224, 3 		# Resolution of inputs
-	input_shape = 4096
-
-	dataset = 'OULU-CASIA'
-	partition = 'prealigned'
-	if dataset == 'OULU-CASIA':
-		from preprocessing.image_img import ImageDataGenerator
-
-		train_data_dir = os.path.join('..', '..', '_Dataset', dataset, 'consecutive', 'training')	
-		validation_data_dir = os.path.join('..', '..', '_Dataset', dataset, 'consecutive', 'validation')
-
-		frames = 5
-		n_output = 6
-
-		nb_train_samples = 6019 / batch_size
-		nb_validation_samples = 1947 / batch_size
-
-	else:
-		from preprocessing.image_img import ImageDataGenerator
-
-		train_data_dir = os.path.join('..', '..', '_Dataset', dataset, '5frames', 'training')	
-		validation_data_dir = os.path.join('..', '..', '_Dataset', dataset, '5frames', 'validation')
-
-		frames = 5
-		n_output = 12
-
-		nb_train_samples = 27971 / batch_size
-		nb_validation_samples = 4173 / batch_size		
+	batch_size = 60
+	nb_train_samples = 29798 / batch_size
+	nb_validation_samples = 4428 / batch_size
+	impl = 2 			# gpu
 
 	############################################
 	# Model
 
 	neurons = 512
-	nlayers = 2
-	dropout = 0.5
+	drop = 0.5
+	lr = 0.0001
 
-	lr = 0.0001		
+	# features_model = 'weights/Stream_1_Frontalization_epoch-09_val-accu-0.35.hdf5'
+	# model = define_model(12, lr, drop, neurons, features_model)
+
+	neurons = 512
+	dropout = 0.5
+	nlayers = 3
 
 	activation = 'relu'
 	activation_r = 'sigmoid'
@@ -145,32 +139,28 @@ if __name__ == '__main__':
 	'''
 	Load the output of the CNN
 	'''
-	cnn_model = load_model(os.path.join('weights', 'CNN_prealigned_epoch-14_val-accu-0.2636.hdf5'))
 
-	model_input = Input(shape=(frames, img_width, img_height, channels), 
-						name='seq_input')
-
-	x = TimeDistributed(cnn_model)(model_input)
-	x = TimeDistributed(Flatten())(x)
-	x = LSTM(neurons, dropout=dropout, name='lstm')(x)
-	out = Dense(n_output, kernel_initializer=weight_init, name='out')(x)
-
-	model = Model(inputs=[model_input], outputs=out)
+	model = Sequential()
+	if nlayers == 1:
+		model.add(GRU(neurons, input_shape=(None, input_shape), implementation=impl, dropout=drop,
+					  activation=activation, recurrent_activation=activation_r))
+	else:
+		model.add(GRU(neurons, input_shape=(None, input_shape), implementation=impl, dropout=drop,
+					  activation=activation, recurrent_activation=activation_r, return_sequences=True))
+		for i in range(1, nlayers-1):
+			model.add(GRU(neurons, dropout=drop, implementation=impl,
+						  activation=activation, recurrent_activation=activation_r, return_sequences=True))
+		model.add(GRU(neurons, dropout=drop, implementation=impl,
+					  activation=activation, recurrent_activation=activation_r))
+ 
+	model.add(Dense(n_output, activation='softmax', kernel_initializer=weight_init))
 
 	model.summary()
-
-	''' Freeze previous layers '''
-	for layer in cnn_model.layers:
-		layer.trainable = False			
 
 	###########################################
 	# Data Generator
 
-	datagen = ImageDataGenerator(
-		rescale=1. / 224,
-		shear_range=0.2,
-		zoom_range=0.2,
-		horizontal_flip=True)
+	datagen = ImageDataGenerator()	
 
 	# Training data generators
 	train_generator = obtain_datagen(datagen, train_data_dir)
@@ -181,8 +171,8 @@ if __name__ == '__main__':
 	dataset_val_gen = generate_data_generator_for_two_images(validation_generator)
 
 	############################################
-	''' Training '''
-
+	# Training
+	lr = 0.0001
 	optimizer = adam(lr=lr)
 	loss = 'sparse_categorical_crossentropy'	
 	model.compile(	loss=loss,
@@ -205,6 +195,6 @@ if __name__ == '__main__':
 						epochs=epochs,
 						validation_data=dataset_val_gen,
 						validation_steps=nb_validation_samples,
-						callbacks=[checkpointer, csv_logger, tensorboard, model_parameters])
+						callbacks=[checkpointer, csv_logger])
 
-	print('\nEnding:', time.ctime())
+	print("Ending:", time.ctime())

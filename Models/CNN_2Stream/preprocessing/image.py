@@ -1095,34 +1095,35 @@ class DirectoryIterator(Iterator):
         super(DirectoryIterator, self).__init__(self.samples, batch_size, shuffle, seed)
 
     def _get_batches_of_transformed_samples(self, index_array):
-        # batch_x = np.zeros((len(index_array),) + self.image_shape, dtype=backend.floatx())
         grayscale = self.color_mode == 'grayscale'
-    
-        batch_x_1 = np.zeros((len(index_array),) + self.image_shape, dtype=backend.floatx())            
-        batch_x_2 = np.zeros((len(index_array),) + (136,), dtype=backend.floatx())
-        # build batch of h5 files
+
+        batch_x_1 = np.zeros((len(index_array),) + self.image_shape, dtype=backend.floatx())
+        batch_x_2 = np.zeros((len(index_array),) + self.image_shape, dtype=backend.floatx())
+
         for i, j in enumerate(index_array):
             fname = self.filenames[j]
 
-            # Image
-            img = load_img(os.path.join(self.directory, fname),
+            # Image Face
+            img1 = load_img(os.path.join(self.directory, fname),
                            grayscale=grayscale,
                            target_size=self.target_size)
-            x = img_to_array(img, data_format=self.data_format)
-            x = self.image_data_generator.random_transform(x)
-            x = self.image_data_generator.standardize(x)
-            batch_x_1[i] = x                
+            x1 = img_to_array(img1, data_format=self.data_format)
+            x1 = self.image_data_generator.random_transform(x1)
+            x1 = self.image_data_generator.standardize(x1)
+            batch_x_1[i] = x1
 
-            # Geometry
-            f = h5py.File(os.path.join(self.directory.replace('prealigned', 'pregeometry'), fname.replace('.jpeg', '.h5')), 'r')
-            x = f['geometry'].value
+            # Image Aligned
+            img2 = load_img(os.path.join(self.directory.replace('preface', 'prealigned'), fname),
+                           grayscale=grayscale,
+                           target_size=self.target_size)
+            # img2 = load_img(os.path.join(self.directory, fname),
+            #                grayscale=grayscale,
+            #                target_size=self.target_size)
 
-            # Normalize
-            new_origin = [112,135]
-            new_x = x - new_origin
-            new_x = (new_x - new_x.min())/(new_x.max() - new_x.min())
-            x = new_x.reshape((136,))
-            batch_x_2[i] = x 
+            x2 = img_to_array(img2, data_format=self.data_format)      
+            x2 = self.image_data_generator.random_transform(x2)
+            x2 = self.image_data_generator.standardize(x2)
+            batch_x_2[i] = x2               
 
         # optionally save augmented images to disk for debugging purposes
         if self.save_to_dir:

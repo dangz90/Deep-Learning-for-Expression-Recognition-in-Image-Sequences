@@ -14,8 +14,8 @@ from keras.utils import layer_utils
 from keras.utils.data_utils import get_file
 from keras import backend as K
 
-WEIGHTS_PATH = 'https://github.com/rcmalli/keras-vggface/releases/download/v2.0/rcmalli_vggface_tf_v2.h5'
-WEIGHTS_PATH_NO_TOP = 'https://github.com/rcmalli/keras-vggface/releases/download/v2.0/rcmalli_vggface_tf_notop_v2.h5'
+RESNET50_WEIGHTS_PATH = 'https://github.com/rcmalli/keras-vggface/releases/download/v2.0/rcmalli_vggface_tf_resnet50.h5'
+RESNET50_WEIGHTS_PATH_NO_TOP = 'https://github.com/rcmalli/keras-vggface/releases/download/v2.0/rcmalli_vggface_tf_notop_resnet50.h5'
 
 def VGGFace(include_top=False, weights='vggface',
             input_tensor=None, input_shape=None,
@@ -65,7 +65,6 @@ def VGGFace(include_top=False, weights='vggface',
         ValueError: in case of invalid argument for `weights`,
             or invalid input shape.
     """
-
     if weights not in {'vggface', None}:
         raise ValueError('The `weights` argument should be either '
                          '`None` (random initialization) or `vggface` '
@@ -79,7 +78,7 @@ def VGGFace(include_top=False, weights='vggface',
                                       default_size=224,
                                       min_size=48,
                                       data_format=K.image_data_format(),
-                                      include_top=include_top)
+                                      require_flatten=include_top)
 
     if input_tensor is None:
         img_input = Input(shape=input_shape)
@@ -146,8 +145,8 @@ def VGGFace(include_top=False, weights='vggface',
                                     WEIGHTS_PATH,
                                     cache_subdir='models')
         else:
-            weights_path = get_file('rcmalli_vggface_tf_notop_v2.h5',
-                                    WEIGHTS_PATH_NO_TOP,
+            weights_path = get_file('rcmalli_vggface_tf_notop_resnet50.h5',
+                                    RESNET50_WEIGHTS_PATH_NO_TOP,
                                     cache_subdir='models')
         model.load_weights(weights_path, by_name=True)
         if K.backend() == 'theano':

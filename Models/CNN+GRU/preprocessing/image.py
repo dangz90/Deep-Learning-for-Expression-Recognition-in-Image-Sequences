@@ -16,9 +16,13 @@ import threading
 import warnings
 import multiprocessing.pool
 from functools import partial
+from pathlib import Path
 
 from keras import backend
 from keras.utils.data_utils import Sequence
+
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 try:
     from PIL import Image as pil_image
@@ -501,8 +505,7 @@ class ImageDataGenerator(object):
                             save_prefix='',
                             save_format='png',
                             follow_links=False,
-                            h5=False,
-                            npy=False):
+                            h5=False):
         return DirectoryIterator(
             directory, self,
             target_size=target_size, color_mode=color_mode,
@@ -513,8 +516,7 @@ class ImageDataGenerator(object):
             save_prefix=save_prefix,
             save_format=save_format,
             follow_links=follow_links,
-            h5=h5,
-            npy=npy)
+            h5=h5)
 
     def standardize(self, x):
         """Apply the normalization configuration to a batch of inputs.
@@ -1017,7 +1019,7 @@ class DirectoryIterator(Iterator):
                  batch_size=32, shuffle=True, seed=None,
                  data_format=None,
                  save_to_dir=None, save_prefix='', save_format='png',
-                 follow_links=False, h5=False, npy=False):
+                 follow_links=False, h5=False):
         if data_format is None:
             data_format = backend.image_data_format()
         self.directory = directory
@@ -1050,9 +1052,8 @@ class DirectoryIterator(Iterator):
         self.save_prefix = save_prefix
         self.save_format = save_format
         self.h5 = h5
-        self.npy = npy
 
-        white_list_formats = {'png', 'jpg', 'jpeg', 'bmp', 'ppm', 'h5', 'npy'}
+        white_list_formats = {'png', 'jpg', 'jpeg', 'bmp', 'ppm', 'npy'}
 
         # first, count the number of samples and classes
         self.samples = 0
@@ -1095,34 +1096,56 @@ class DirectoryIterator(Iterator):
         super(DirectoryIterator, self).__init__(self.samples, batch_size, shuffle, seed)
 
     def _get_batches_of_transformed_samples(self, index_array):
+
+        def applyPCA(X):
+            pca = PCA(n_components=100)
+            # x_std = StandardScaler().fit_transform(X)
+            pca.fit(X)
+
+            eigenvalues = pca.explained_variance_
+
+        def file_to_array(image_file, fclass):
+            new_directory = self.directory.replace('5frames','feature_vector')
+
+            file_path = os.path.join(new_directory, 'NoSymmetry', fclass, image_file)
+
+            if file_path.split('/')[5] == 'training':
+                file_path = file_path.replace('.MP4', '_').replace('.jpg.jpg', '.h5')
+            else:
+                # file_path = file_path.replace('.jpg.jpg', '.jpg')
+                check = Path(file_path.replace('.mp4', '_').replace('.jpg.jpg', '.h5'))
+
+                if check.exists():
+                    file_path = file_path.replace('.mp4', '_').replace('.jpg.jpg', '.h5')
+                else:
+                    file_path = file_path.replace('.jpg.jpg', '.h5')
+            
+            f = h5py.File(file_path, 'r')            
+            d = np.array(f.get('data'))
+            d = d.reshape((4096,))
+
+            return d
+
         # batch_x = np.zeros((len(index_array),) + self.image_shape, dtype=backend.floatx())
         grayscale = self.color_mode == 'grayscale'
-    
-        batch_x_1 = np.zeros((len(index_array),) + self.image_shape, dtype=backend.floatx())            
-        batch_x_2 = np.zeros((len(index_array),) + (136,), dtype=backend.floatx())
-        # build batch of h5 files
-        for i, j in enumerate(index_array):
-            fname = self.filenames[j]
+        if self.h5 == True:
+            batch_x = np.zeros((len(index_array),) + (5, 4096), dtype=backend.floatx())
 
-            # Image
-            img = load_img(os.path.join(self.directory, fname),
-                           grayscale=grayscale,
-                           target_size=self.target_size)
-            x = img_to_array(img, data_format=self.data_format)
-            x = self.image_data_generator.random_transform(x)
-            x = self.image_data_generator.standardize(x)
-            batch_x_1[i] = x                
 
-            # Geometry
-            f = h5py.File(os.path.join(self.directory.replace('prealigned', 'pregeometry'), fname.replace('.jpeg', '.h5')), 'r')
-            x = f['geometry'].value
+            # build batch of h5 files
+            for i, j in enumerate(index_array):
+                fname = self.filenames[j]
 
-            # Normalize
-            new_origin = [112,135]
-            new_x = x - new_origin
-            new_x = (new_x - new_x.min())/(new_x.max() - new_x.min())
-            x = new_x.reshape((136,))
-            batch_x_2[i] = x 
+                # Read h5 files
+                f = np.load(os.path.join(self.directory, fname))                
+                file_list = [fi for fi in f]
+
+                x = np.array([np.array(file_to_array(file, fname.split('/')[0])) for file in file_list])
+
+                applyPCA(x)
+
+                # Normalize
+                batch_x[i] = x
 
         # optionally save augmented images to disk for debugging purposes
         if self.save_to_dir:
@@ -1146,7 +1169,7 @@ class DirectoryIterator(Iterator):
                 batch_y[i, label] = 1.
         else:
             return batch_x
-        return batch_x_1, batch_x_2, batch_y
+        return batch_x, batch_y
 
     def next(self):
         """For python 2.x.

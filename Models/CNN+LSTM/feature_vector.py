@@ -9,16 +9,18 @@ from keras.models import Model, load_model
 __author__ = 'Daniel Garcia Zapata'
 __model__ = 'Feature_Vector'
 
-def create_feature_vector(dir, features):
+def create_feature_vector(dir, features, processed):
 	img_width, img_height = 224, 224
-	subdirs = [x[0] for x in os.walk(dir)][1:] 
-
-	for subdir in subdirs:
+	subdirs = [x[0] for x in os.walk(dir)]
+	
+	for subdir in sorted(subdirs):
 		files = next(os.walk(subdir))[2]	# os.walk(subdir).__next__()[2]
-		if (len(files) > 0):
-			for file in files:
+
+		for file in sorted(files):
+			if file.endswith('.jpeg'):		
+				
 				# Check if destination directory exists if not then create it
-				destination = subdir.replace('frontalization', 'feature_vector')
+				destination = subdir.replace(processed, 'feature_vector_'+processed)
 				if not os.path.exists(destination):
 					os.makedirs(destination)
 
@@ -33,7 +35,7 @@ def create_feature_vector(dir, features):
 				feature_vec = features.predict(images)
 
 				# Save feature vector in h5 format
-				feature_vector_path = os.path.join(destination, file.replace('.jpg', '.h5'))
+				feature_vector_path = os.path.join(destination, file.replace('.jpeg', '.h5'))
 
 				print('Saving', feature_vector_path)
 				hf = h5py.File(feature_vector_path, 'w')
@@ -47,22 +49,23 @@ if __name__ == '__main__':
 	###########################################
 	# Parameters
 	
-	train_data_dir = os.path.join('..', '..', '_Dataset', 'frontalization', 'training/NoSymmetry')
-	validation_data_dir = os.path.join('..', '..', '_Dataset', 'frontalization', 'validation/NoSymmetry')
-
-	if not os.path.exists(validation_data_dir):
-		os.makedirs(validation_data_dir)
+	dataset = 'OULU-CASIA'
+	processed = 'prealigned'
+	train_data_dir = os.path.join('..', '..', '_Dataset', dataset, processed, 'training')	
+	validation_data_dir = os.path.join('..', '..', '_Dataset', dataset, processed, 'validation')
+	data_dir = [train_data_dir, validation_data_dir]
 
 	############################################
 	# Model
 
 	'''	Load the output of the CNN '''
-	cnn_model = load_model('weights/Stream_1_Frontalization_epoch-09_val-accu-0.35.hdf5')
+	weights = 'CNN_patch_epoch-06_val-accu-0.34.hdf5'
+	cnn_model = load_model(os.path.join('weights', weights))
 	cnn_output = cnn_model.get_layer('fc7').output
 
 	''' Feature Vector '''
 	features = Model(cnn_model.input, cnn_output)
-	# create_feature_vector(train_data_dir, features)
-	create_feature_vector(validation_data_dir, features)
+	for dirs in data_dir:
+		create_feature_vector(dirs, features, processed)
 
 	print("Ending:", time.ctime())

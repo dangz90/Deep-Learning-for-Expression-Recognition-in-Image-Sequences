@@ -5,7 +5,6 @@ new preprocessing methods, etc...
 from __future__ import absolute_import
 from __future__ import print_function
 
-import cv2
 import numpy as np
 import re
 from scipy import linalg
@@ -1028,7 +1027,7 @@ class DirectoryIterator(Iterator):
         self.data_format = data_format
         if self.color_mode == 'rgb':
             if self.data_format == 'channels_last':
-                self.image_shape = (16,) + self.target_size + (3,)
+                self.image_shape = (5,) + self.target_size + (3,)
             else:
                 self.image_shape = (3,) + self.target_size
         else:
@@ -1095,9 +1094,20 @@ class DirectoryIterator(Iterator):
 
         def img_to_array_std(image_file, fname):
             fclass = fname.split('/')[0]
-            new_directory = self.directory.replace('dataset16_consecutive_3d','patches_consecutive112')
+            new_directory = self.directory.replace('5frames','frontalization')
 
-            img_path = os.path.join(new_directory, fclass, image_file)
+            img_path = os.path.join(new_directory, 'NoSymmetry', fclass, image_file)
+
+            if img_path.split('/')[5] == 'training':
+                img_path = img_path.replace('.MP4', '_').replace('.jpg.jpg', '.jpg')
+            else:
+                check = os.path.isfile(img_path.replace('.mp4', '_').replace('.jpg.jpg', '.jpg'))
+
+                if check:
+                    img_path = img_path.replace('.mp4', '_').replace('.jpg.jpg', '.jpg')
+                else:
+                    img_path = img_path.replace('.jpg.jpg', '.jpg')
+
             img = load_img(os.path.join(img_path),
                                         grayscale=grayscale,
                                         target_size=self.target_size)
@@ -1121,18 +1131,6 @@ class DirectoryIterator(Iterator):
                 
                 x = np.array([np.array(img_to_array_std(img, fname)) for img in images_list])
 
-                batch_x[i] = x
-        else:
-            batch_x = np.zeros((len(index_array),) + self.image_shape, dtype=backend.floatx())
-            # build batch of image data
-            for i, j in enumerate(index_array):
-                fname = self.filenames[j]
-                img = load_img(os.path.join(self.directory, fname),
-                               grayscale=grayscale,
-                               target_size=self.target_size)
-                x = img_to_array(img, data_format=self.data_format)
-                x = self.image_data_generator.random_transform(x)
-                x = self.image_data_generator.standardize(x)
                 batch_x[i] = x
 
         # optionally save augmented images to disk for debugging purposes

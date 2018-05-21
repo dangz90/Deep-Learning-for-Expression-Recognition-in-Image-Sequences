@@ -1,4 +1,5 @@
 # export CUDA_VISIBLE_DEVICES=1,2
+
 import os
 import time
 import csv, six
@@ -8,10 +9,11 @@ from keras.optimizers import adam
 from keras.initializers import glorot_uniform
 from keras.models import Sequential, Model, load_model
 from keras.callbacks import ModelCheckpoint, CSVLogger, TensorBoard, Callback
-from keras.layers import Dense, Activation, Flatten, Input, LSTM, TimeDistributed
+from keras.layers import Dense, Activation, Flatten, Input, GRU, TimeDistributed
 
 from collections import OrderedDict
 from SaveModelDirectory import create_path
+from preprocessing.image_img import ImageDataGenerator
 
 import warnings
 warnings.simplefilter("ignore", DeprecationWarning)
@@ -83,7 +85,7 @@ class ModelParameters(Callback):
 
 if __name__ == '__main__':
 
-	__model__ = 'CNN_LSTM_Image'
+	__model__ = 'CNN_GRU_Image'
 
 	print('Starting:', time.ctime(), '\n')
 
@@ -92,7 +94,7 @@ if __name__ == '__main__':
 	# Parameters
 	
 	epochs = 20
-	batch_size = 30
+	batch_size = 20
 	impl = 2 			# gpu	
 
 	###########################################
@@ -101,22 +103,20 @@ if __name__ == '__main__':
 	img_width, img_height, channels = 224, 224, 3 		# Resolution of inputs
 	input_shape = 4096
 
-	dataset = 'OULU-CASIA'
+	dataset = 'SASE-FE'
 	partition = 'prealigned'
 	if dataset == 'OULU-CASIA':
-		from preprocessing.image_img import ImageDataGenerator
-
 		train_data_dir = os.path.join('..', '..', '_Dataset', dataset, 'consecutive', 'training')	
 		validation_data_dir = os.path.join('..', '..', '_Dataset', dataset, 'consecutive', 'validation')
 
 		frames = 5
 		n_output = 6
 
-		nb_train_samples = 6019 / batch_size
-		nb_validation_samples = 1947 / batch_size
+		nb_train_samples = 5941 / batch_size
+		nb_validation_samples = 2025 / batch_size
 
 	else:
-		from preprocessing.image_img import ImageDataGenerator
+		partition = ''
 
 		train_data_dir = os.path.join('..', '..', '_Dataset', dataset, '5frames', 'training')	
 		validation_data_dir = os.path.join('..', '..', '_Dataset', dataset, '5frames', 'validation')
@@ -130,11 +130,9 @@ if __name__ == '__main__':
 	############################################
 	# Model
 
-	neurons = 512
+	neurons = 1024
 	nlayers = 2
 	dropout = 0.5
-
-	lr = 0.0001		
 
 	activation = 'relu'
 	activation_r = 'sigmoid'
@@ -145,14 +143,14 @@ if __name__ == '__main__':
 	'''
 	Load the output of the CNN
 	'''
-	cnn_model = load_model(os.path.join('weights', 'CNN_prealigned_epoch-14_val-accu-0.2636.hdf5'))
+	cnn_model = load_model(os.path.join('weights', 'CNN_prealigned.hdf5'))
 
 	model_input = Input(shape=(frames, img_width, img_height, channels), 
 						name='seq_input')
 
 	x = TimeDistributed(cnn_model)(model_input)
 	x = TimeDistributed(Flatten())(x)
-	x = LSTM(neurons, dropout=dropout, name='lstm')(x)
+	x = GRU(neurons, dropout=dropout, name='gru_1')(x)
 	out = Dense(n_output, kernel_initializer=weight_init, name='out')(x)
 
 	model = Model(inputs=[model_input], outputs=out)
@@ -182,7 +180,7 @@ if __name__ == '__main__':
 
 	############################################
 	''' Training '''
-
+	lr = 0.0001		
 	optimizer = adam(lr=lr)
 	loss = 'sparse_categorical_crossentropy'	
 	model.compile(	loss=loss,
@@ -193,18 +191,18 @@ if __name__ == '__main__':
 	Callbacks
 	'''
 	# Create Version folder
-	export_path = create_path(__model__, dataset)
+	# export_path = create_path(__model__, dataset)
 
-	checkpointer = ModelCheckpoint(filepath=os.path.join(export_path, __model__+'_epoch-{epoch:02d}_val-accu-{val_acc:.4f}.hdf5'), verbose=1) #, save_best_only=True) 
-	csv_logger = CSVLogger(os.path.join(export_path, '_logs_'+__model__+'.log'), separator=',', append=False)
-	tensorboard = TensorBoard(log_dir=export_path, histogram_freq=0, batch_size=batch_size, write_graph=True, write_grads=False, write_images=False, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
-	model_parameters = ModelParameters(os.path.join(export_path, '_model_'+__model__+'.log'))
+	# checkpointer = ModelCheckpoint(filepath=os.path.join(export_path, __model__+'_epoch-{epoch:02d}_val-accu-{val_acc:.4f}.hdf5'), verbose=1, save_best_only=True) 
+	# csv_logger = CSVLogger(os.path.join(export_path, '_logs_'+__model__+'.log'), separator=',', append=False)
+	# tensorboard = TensorBoard(log_dir=export_path, histogram_freq=0, batch_size=batch_size, write_graph=True, write_grads=False, write_images=False, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
+	# model_parameters = ModelParameters(os.path.join(export_path, '_model_'+__model__+'.log'))
 
 	model.fit_generator(dataset_train_gen,
 						steps_per_epoch=nb_train_samples,
 						epochs=epochs,
 						validation_data=dataset_val_gen,
-						validation_steps=nb_validation_samples,
-						callbacks=[checkpointer, csv_logger, tensorboard, model_parameters])
+						validation_steps=nb_validation_samples)
+						# ,callbacks=[checkpointer, csv_logger, model_parameters])
 
 	print('\nEnding:', time.ctime())

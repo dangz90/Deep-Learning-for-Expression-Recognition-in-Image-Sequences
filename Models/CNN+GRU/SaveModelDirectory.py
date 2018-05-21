@@ -2,7 +2,7 @@ import os
 import sys
 import tensorflow as tf
 
-def create_path(__model__):
+def create_path(__model__, dataset):
 
 	''' 
 	Directory base folder
@@ -14,7 +14,7 @@ def create_path(__model__):
 	'''
 
 	# Obtain most recent version
-	export_base_path = os.path.join(export_path_base, '_versions', __model__)
+	export_base_path = os.path.join(export_path_base, '_versions', dataset, __model__)
 
 	# Verify a folder already exists and assign version number
 	if os.path.isdir(export_base_path):
@@ -30,14 +30,11 @@ def create_path(__model__):
 	'''
 	Create version folder
 	'''
-	export_path = os.path.join(	export_path_base,
-								'_versions',
-								__model__,
+	export_path = os.path.join(	export_base_path,
 								str(FLAGS.model_version))
-
-	print('Exporting model to', export_path)
 	builder = tf.saved_model.builder.SavedModelBuilder(export_path)
-	os.makedirs( os.path.join(export_path, 'weights') )
-	os.makedirs( os.path.join(export_path, 'logs') )
 
 	return export_path
+
+if __name__ == '__main__':
+    create_path()	
