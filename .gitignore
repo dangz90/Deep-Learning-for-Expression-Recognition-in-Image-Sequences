@@ -21,6 +21,10 @@
 /Models/CNN+LSTM/_versions/*
 /Models/CNN+GRU/_versions/*
 
+#   Office files  #
+###################
+*.pptx
+
 # Compiled source #
 ###################
 *.com
