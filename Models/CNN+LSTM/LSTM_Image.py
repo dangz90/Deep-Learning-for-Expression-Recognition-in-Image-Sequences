@@ -1,8 +1,11 @@
 # export CUDA_VISIBLE_DEVICES=1,2
 import os
+import sys
 import time
-import csv, six
-import numpy as np
+import os.path as osp
+
+# Add the parent module to the import path
+sys.path.append(osp.realpath(osp.join(osp.dirname(__file__), '../')))
 
 from keras.optimizers import adam
 from keras.initializers import glorot_uniform
@@ -12,6 +15,9 @@ from keras.layers import Dense, Activation, Flatten, Input, LSTM, TimeDistribute
 
 from collections import OrderedDict
 from SaveModelDirectory import create_path
+
+from _saving.SaveModelDirectory import create_path
+from _saving.ModelParameters import ModelParameters
 
 import warnings
 warnings.simplefilter("ignore", DeprecationWarning)
@@ -32,54 +38,7 @@ def obtain_datagen(datagen, train_path, h5=True):
 def generate_data_generator_for_two_images(genX1):
 	while True:
 		X1i = genX1.next()
-		yield X1i[0], X1i[1]	
-
-# Class for writing the model parameters
-class ModelParameters(Callback):
-	def __init__(self, filename, separator=',', append=False):
-		self.sep = separator
-		self.filename = filename
-		self.append = append
-		self.writer = None
-		self.keys = None
-		self.append_header = True
-		self.file_flags = 'b' if six.PY2 and os.name == 'nt' else ''
-		super(ModelParameters, self).__init__()
-
-	def on_train_begin(self, logs=None):
-		if self.append:
-			if os.path.exists(self.filename):
-				with open(self.filename, 'r' + self.file_flags) as f:
-					self.append_header = not bool(len(f.readline()))
-			self.csv_file = open(self.filename, 'a' + self.file_flags)
-		else:
-			self.csv_file = open(self.filename, 'w' + self.file_flags)
-
-		if self.keys is None:
-			self.keys = ['dataset', 'partition', 'loss', 'lr', 'nlayers', 'date']
-
-		if not self.writer:
-					class CustomDialect(csv.excel):
-						delimiter = self.sep
-
-					self.writer = csv.DictWriter(self.csv_file,
-												 fieldnames=['model'] + self.keys, dialect=CustomDialect)
-					if self.append_header:
-						self.writer.writeheader()
-
-		row_dict = OrderedDict({'model': __model__, 
-								'dataset': dataset,
-								'partition': partition,
-								'loss': loss,
-								'lr': lr,
-								'nlayers':nlayers,
-								'date': time.ctime()})
-
-		self.writer.writerow(row_dict)
-		self.csv_file.flush()        
-
-		self.csv_file.close()
-		self.writer = None  
+		yield X1i[0], X1i[1]
 
 if __name__ == '__main__':
 
@@ -192,13 +151,21 @@ if __name__ == '__main__':
 	'''
 	Callbacks
 	'''
+	row_dict = OrderedDict({'model': __model__, 
+							'dataset': dataset,
+							'partition': partition,
+							'loss': loss,
+							'lr': lr,
+							'nlayers': nlayers,
+							'date': time.ctime()})
+
 	# Create Version folder
 	export_path = create_path(__model__, dataset)
 
-	checkpointer = ModelCheckpoint(filepath=os.path.join(export_path, __model__+'_epoch-{epoch:02d}_val-accu-{val_acc:.4f}.hdf5'), verbose=1) #, save_best_only=True) 
-	csv_logger = CSVLogger(os.path.join(export_path, '_logs_'+__model__+'.log'), separator=',', append=False)
+	checkpointer = ModelCheckpoint(filepath=osp.join(export_path, __model__+'_epoch-{epoch:02d}_val-accu-{val_acc:.4f}.hdf5'), verbose=1) #, save_best_only=True) 
+	csv_logger = CSVLogger(osp.join(export_path, '_logs_'+__model__+'.log'), separator=',', append=False)
 	tensorboard = TensorBoard(log_dir=export_path, histogram_freq=0, batch_size=batch_size, write_graph=True, write_grads=False, write_images=False, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
-	model_parameters = ModelParameters(os.path.join(export_path, '_model_'+__model__+'.log'))
+	model_parameters = ModelParameters(osp.join(export_path, '_model_'+__model__+'.log'), row_dict)
 
 	model.fit_generator(dataset_train_gen,
 						steps_per_epoch=nb_train_samples,

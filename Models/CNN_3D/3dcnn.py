@@ -1,36 +1,15 @@
-from theano import function, config, shared, tensor
-import numpy
-import time
-
-vlen = 10 * 30 * 768  # 10 x #cores x # threads per core
-iters = 1000
-
-rng = numpy.random.RandomState(22)
-x = shared(numpy.asarray(rng.rand(vlen), config.floatX))
-f = function([], tensor.exp(x))
-print(f.maker.fgraph.toposort())
-t0 = time.time()
-for i in range(iters):
-    r = f()
-t1 = time.time()
-print("Looping %d times took %f seconds" % (iters, t1 - t0))
-print("Result is %s" % (r,))
-if numpy.any([isinstance(x.op, tensor.Elemwise) and
-              ('Gpu' not in type(x.op).__name__)
-              for x in f.maker.fgraph.toposort()]):
-    print('Used the cpu')
-else:
-    print('Used the gpu')
-
-
-# export CUDA_VISIBLE_DEVICES=1,2
-import os
-import time
-import csv, six
-
 # import theano
 # theano.config.device = 'gpu:5'
 # theano.config.floatX = 'float32'
+
+# export CUDA_VISIBLE_DEVICES=1,2
+import os
+import sys
+import time
+import os.path as osp
+
+# Add the parent module to the import path
+sys.path.append(osp.realpath(osp.join(osp.dirname(__file__), '../')))
 
 import warnings
 warnings.simplefilter("ignore", DeprecationWarning)
@@ -42,7 +21,10 @@ from keras.optimizers import adam
 from keras.callbacks import ModelCheckpoint, CSVLogger, Callback
 
 from collections import OrderedDict
-from SaveModelDirectory import create_path
+
+from _saving.SaveModelDirectory import create_path
+from _saving.ModelParameters import ModelParameters
+
 from preprocessing.image import ImageDataGenerator
 
 
@@ -62,52 +44,6 @@ def generate_data_generator_for_two_images(genX1):
 	while True:
 		X1i = genX1.next()
 		yield X1i[0], X1i[1]
-
-# Class for writing the model parameters
-class ModelParameters(Callback):
-	def __init__(self, filename, separator=',', append=False):
-		self.sep = separator
-		self.filename = filename
-		self.append = append
-		self.writer = None
-		self.keys = None
-		self.append_header = True
-		self.file_flags = 'b' if six.PY2 and os.name == 'nt' else ''
-		super(ModelParameters, self).__init__()
-
-	def on_train_begin(self, logs=None):
-		if self.append:
-			if os.path.exists(self.filename):
-				with open(self.filename, 'r' + self.file_flags) as f:
-					self.append_header = not bool(len(f.readline()))
-			self.csv_file = open(self.filename, 'a' + self.file_flags)
-		else:
-			self.csv_file = open(self.filename, 'w' + self.file_flags)
-
-		if self.keys is None:
-			self.keys = ['dataset', 'partition', 'loss', 'lr', 'date']
-
-		if not self.writer:
-					class CustomDialect(csv.excel):
-						delimiter = self.sep
-
-					self.writer = csv.DictWriter(self.csv_file,
-												 fieldnames=['model'] + self.keys, dialect=CustomDialect)
-					if self.append_header:
-						self.writer.writeheader()
-
-		row_dict = OrderedDict({'model': __model__, 
-								'dataset': dataset,
-								'partition': partition,
-								'loss': loss,
-								'lr': lr,
-								'date': time.ctime()})
-
-		self.writer.writerow(row_dict)
-		self.csv_file.flush()        
-
-		self.csv_file.close()
-		self.writer = None
 
 if __name__ == '__main__':
 
@@ -130,8 +66,8 @@ if __name__ == '__main__':
 	dataset = 'SASE-FE'				# OULU-CASIA, SASE-FE
 	if dataset == 'OULU-CASIA':
 		partition = 'prealigned'
-		train_data_dir = os.path.join('..', '..', '_Dataset', dataset, 'consecutive', 'training')	
-		validation_data_dir = os.path.join('..', '..', '_Dataset', dataset, 'consecutive', 'validation')
+		train_data_dir = osp.join('..', '..', '_Dataset', dataset, 'consecutive', 'training')	
+		validation_data_dir = osp.join('..', '..', '_Dataset', dataset, 'consecutive', 'validation')
 
 		frames = 5
 		n_output = 6
@@ -141,8 +77,8 @@ if __name__ == '__main__':
 
 	else:
 		partition = 'frontalization'
-		train_data_dir = os.path.join('..', '..', '_Dataset', dataset, '5frames', 'training')	
-		validation_data_dir = os.path.join('..', '..', '_Dataset', dataset, '5frames', 'validation')
+		train_data_dir = osp.join('..', '..', '_Dataset', dataset, '5frames', 'training')	
+		validation_data_dir = osp.join('..', '..', '_Dataset', dataset, '5frames', 'validation')
 
 		frames = 5
 		n_output = 12
@@ -198,11 +134,19 @@ if __name__ == '__main__':
 	'''
 	Callbacks
 	'''
+	row_dict = OrderedDict({'model': __model__,
+						'dataset': dataset,
+						'partition': partition,
+						'loss': loss,
+						'lr': lr,
+						'date': time.ctime()})
+
+	# Create Version folder
 	export_path = create_path(__model__, dataset)
 
-	checkpointer = ModelCheckpoint(filepath=os.path.join(export_path, __model__+'_epoch-{epoch:02d}_val-accu-{val_acc:.4f}.hdf5'), verbose=1) #, save_best_only=True) 
-	csv_logger = CSVLogger(os.path.join(export_path, '_logs_'+__model__+'.log'), separator=',', append=False)
-	model_parameters = ModelParameters(os.path.join(export_path, '_model_'+__model__+'.log'))
+	checkpointer = ModelCheckpoint(filepath=osp.join(export_path, __model__+'_epoch-{epoch:02d}_val-accu-{val_acc:.4f}.hdf5'), verbose=1) #, save_best_only=True) 
+	csv_logger = CSVLogger(osp.join(export_path, '_logs_'+__model__+'.log'), separator=',', append=False)
+	model_parameters = ModelParameters(osp.join(export_path, '_model_'+__model__+'.log'), row_dict)	
 
 	'''
 	Train the model

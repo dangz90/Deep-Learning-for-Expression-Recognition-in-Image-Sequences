@@ -1,16 +1,22 @@
 # export CUDA_VISIBLE_DEVICES=1,2
 import os
+import sys
 import time
-import csv, six
+import os.path as osp
+
+# Add the parent module to the import path
+sys.path.append(osp.realpath(osp.join(osp.dirname(__file__), '../')))
 
 from keras.optimizers import adam
 from keras.models import Model, load_model
-from keras.callbacks import ModelCheckpoint, CSVLogger, Callback
 from keras.layers import Flatten, Dense, Input, concatenate
+from keras.callbacks import ModelCheckpoint, CSVLogger, TensorBoard
 
 from collections import OrderedDict
 from preprocessing.image import ImageDataGenerator
-from SaveModelDirectory import create_path
+
+from _saving.SaveModelDirectory import create_path
+from _saving.ModelParameters import ModelParameters
 
 __author__ = 'Daniel Garcia Zapata'
 
@@ -28,52 +34,7 @@ def obtain_datagen(datagen, path, h5=False, npy=False):
 def generate_data_generator_for_two_images(genX):
 	while True:
 		Xi = genX.next()
-		yield [ Xi[0], Xi[1] ], Xi[2]	
-
-# Class for writing the model parameters
-class ModelParameters(Callback):
-	def __init__(self, filename, separator=',', append=False):
-		self.sep = separator
-		self.filename = filename
-		self.append = append
-		self.writer = None
-		self.keys = None
-		self.append_header = True
-		self.file_flags = 'b' if six.PY2 and os.name == 'nt' else ''
-		super(ModelParameters, self).__init__()
-
-	def on_train_begin(self, logs=None):
-		if self.append:
-			if os.path.exists(self.filename):
-				with open(self.filename, 'r' + self.file_flags) as f:
-					self.append_header = not bool(len(f.readline()))
-			self.csv_file = open(self.filename, 'a' + self.file_flags)
-		else:
-			self.csv_file = open(self.filename, 'w' + self.file_flags)
-
-		if self.keys is None:
-			self.keys = ['dataset', 'loss', 'lr', 'date']
-
-		if not self.writer:
-					class CustomDialect(csv.excel):
-						delimiter = self.sep
-
-					self.writer = csv.DictWriter(self.csv_file,
-												 fieldnames=['model'] + self.keys, dialect=CustomDialect)
-					if self.append_header:
-						self.writer.writeheader()
-
-		row_dict = OrderedDict({'model': __model__, 
-								'dataset': dataset,
-								'loss': loss,
-								'lr': lr,
-								'date': time.ctime()})
-
-		self.writer.writerow(row_dict)
-		self.csv_file.flush()        
-
-		self.csv_file.close()
-		self.writer = None 		
+		yield [ Xi[0], Xi[1] ], Xi[2]
 
 if __name__ == '__main__':
 
@@ -94,9 +55,10 @@ if __name__ == '__main__':
 	nb_class = 6
 
 	dataset = 'OULU-CASIA'
+	partition = 'preface'       # prealigned preface	
 	# Dataset for Stream 1    
-	train_data_dir = os.path.join('..', '..', '_Dataset', dataset, 'preface', 'training')
-	validation_data_dir = os.path.join('..', '..', '_Dataset', dataset, 'preface', 'validation')
+	train_data_dir = osp.join('..', '..', '_Dataset', dataset, partition, 'training')
+	validation_data_dir = osp.join('..', '..', '_Dataset', dataset, partition, 'validation')	
 
 
 	if dataset == 'OULU-CASIA':
@@ -180,12 +142,20 @@ if __name__ == '__main__':
 	'''
 	Callbacks
 	'''
-	# Create Version folder
-	export_path = create_path(__model__)
+	row_dict = OrderedDict({'model': __model__,
+						'dataset': dataset,
+						'partition': partition,
+						'loss': loss,
+						'lr': lr,
+						'date': time.ctime()})
 
-	checkpointer = ModelCheckpoint(filepath= os.path.join(export_path, 'weights', __model__+'_epoch-{epoch:02d}_val-accu-{val_acc:.4f}.hdf5'), verbose=1) #, save_best_only=True) 
-	csv_logger = CSVLogger(os.path.join(export_path, 'logs',__model__+'.log'), separator=',', append=False)
-	model_parameters = ModelParameters(os.path.join(export_path, '_model_'+__model__+'.log'))
+	# Create Version folder
+	export_path = create_path(__model__, dataset)
+
+	checkpointer = ModelCheckpoint(filepath=osp.join(export_path, __model__+'_epoch-{epoch:02d}_val-accu-{val_acc:.4f}.hdf5'), verbose=1) #, save_best_only=True) 
+	csv_logger = CSVLogger(osp.join(export_path, '_logs_'+__model__+'.log'), separator=',', append=False)
+	tensorboard = TensorBoard(log_dir=export_path, histogram_freq=0, batch_size=batch_size, write_graph=True, write_grads=False, write_images=False, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
+	model_parameters = ModelParameters(osp.join(export_path, '_model_'+__model__+'.log'), row_dict)
 
 	'''
 	Train the model

@@ -12,13 +12,14 @@ def create_path(__model__, dataset):
 	'''
 	Define model version
 	'''
-
 	# Obtain most recent version
 	export_base_path = os.path.join(export_path_base, '_versions', dataset, __model__)
 
 	# Verify a folder already exists and assign version number
 	if os.path.isdir(export_base_path):
-		all_subdirs = [int(d) for d in os.listdir(export_base_path) if os.path.isdir(export_base_path)]
+		raw_all_subdirs = [d for d in os.listdir(export_base_path) if os.path.isdir(export_base_path)]
+		all_subdirs = [subdir for subdir in raw_all_subdirs if not subdir.startswith('.')]
+
 		__version__ = int(max(all_subdirs)) + 1
 	else:
 		__version__ = 1
