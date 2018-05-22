@@ -20,6 +20,11 @@ Give examples
 * [Tensorflow](https://www.tensorflow.org/) - TensorFlow™ is an open source software library for numerical computation using data flow graphs.
 * [Theano](http://deeplearning.net/software/theano/) - Theano is a Python library that allows you to define, optimize, and evaluate mathematical expressions involving multi-dimensional arrays efficiently.
 
+## Datasets
+
+* [SASE-FE](http://icv.tuit.ut.ee/sase-fe-database.html) - SASE-FE real and fake emotion database contains videos with six typical emotions depicting a real and a fake emotion.
+* [Oulu-Casia](http://www.cse.oulu.fi/CMV/Downloads/Oulu-CASIA) - Oulu-CASIA NIR&VIS facial expression database contains videos with the six typical expressions.
+
 ## Author
 
 * **Daniel Garcia Zapata** [[dangz90]](https://github.com/dangz90)
